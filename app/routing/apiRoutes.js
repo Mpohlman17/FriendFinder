@@ -1,46 +1,39 @@
 // require friends data file
-const friends = require('../data/friends.js');
+var friends = require('../data/friends');
 
 //Routes
 module.exports = function (app) {
 
-    // API GET Requests
-    app.get('/api/friends', function (req, res) {
-        res.json(friends);
-    });
-    // API POST Requests
-    app.post('/api/friends', function (req, res) {
-console.log(req.body.scores);
-        // Receive user details (name, photo, scores)
-    var user = req.body;
+  // API GET Requests
+  app.get('/api/friends', function (req, res) {
+    res.json(friends);
+  });
+  // API POST Requests
+  app.post('/api/friends', function (req, res) {
 
-    // parseInt for scores
-    for(var i = 0; i < user.scores.length; i++) {
-      user.scores[i] = parseInt(user.scores[i]);
-    }
-
-    var bestMatchIndex = 0;
-    var minimumDifference = 40;
-
-    // in this for-loop, start off with a zero difference and compare the user and the ith friend scores, one set at a time
-    //  whatever the difference is, add to the total difference
-    for(var i = 0; i < friends.length; i++) {
-      var totalDifference = 0;
-      for(var j = 0; j < friends[i].scores.length; j++) {
-        var difference = Math.abs(user.scores[j] - friends[i].scores[j]);
-        totalDifference += difference;
+    var newUserScore = req.body.scores;
+    var scoresArray = [];
+    var bestMatch = 0;
+    // loop through current friends in array then compaire their scores to newUser score
+    for (var i = 0; i < friends.length; i++) {
+      var scoreDifference = 0;
+      for (var j = 0; j < newUserScore.length; j++) {
+        scoreDifference += (Math.abs(parseInt(friends[i].scores[j]) - parseInt(newUserScore[j])));
       }
-
-      // updating current best friend with new min difference
-      if(totalDifference < minimumDifference) {
-        bestMatchIndex = i;
-        minimumDifference = totalDifference;
+      // push the score difference into the scoresArray
+      scoresArray.push(scoreDifference);
+    }
+    // loop to find best match
+    for (var i = 0; i < scoresArray.length; i++) {
+      if (scoresArray[i] <= scoresArray[bestMatch]) {
+        bestMatch = i;
       }
     }
+    // return the bestMatch data
+    var bestFriends = friends[bestMatch];
+    res.json(bestFriends);
 
-    // after finding match, add user to friend array
-    friends.push(user);
-
-    res.json(friends[bestMatchIndex]);
+    // push newUser data into array
+    friends.push(req.body);
   });
 };
